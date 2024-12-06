@@ -5,11 +5,13 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed = 8.0f;
-    float jumpForce = 5.0f;
+    public float rotateSpeed = 50.0f;
+    public float jumpForce = 5.0f;
     Animator plrAnim;
     bool isOnGround = true;
     Rigidbody plrRb;
     Vector3 movement;
+    public ParticleSystem explosionParticle;
 
     // Start is called before the first frame update
     void Start()
@@ -25,38 +27,41 @@ public class PlayerController : MonoBehaviour
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
-        //transform.Translate(Vector3.right * horizontal * speed * Time.deltaTime);
-        //transform.Translate(Vector3.forward * vertical * speed * Time.deltaTime);
+        transform.Translate(Vector3.forward * vertical * speed * Time.deltaTime);
 
-        if (horizontal != 0)
+        if (horizontal > 0)
+            {
+                transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime);
+            }
+        else if (horizontal < 0)
+            {
+                transform.Rotate(-Vector3.up * rotateSpeed * Time.deltaTime);
+            }
+
+        if (vertical != 0)
         {
             plrAnim.SetFloat("Speed_f", 0.26f);
             plrAnim.SetBool("Static_b", true);
-            Debug.Log("here");
         }
         else
         {
             plrAnim.SetFloat("Speed_f", 0);
-        }
-
-        if (vertical == 0)
-        {
-            plrAnim.SetFloat("Speed_f", 0);
-        }
-        else
-        {
-            plrAnim.SetFloat("Speed_f", 0.26f);
-            plrAnim.SetBool("Static_b", true);
         }
 
         movement = new Vector3(horizontal, transform.position.y, vertical);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
             isOnGround = true;
+        }
+        if (collision.gameObject.CompareTag("Item"))
+        {
+            Destroy(collision.gameObject);
+            explosionParticle.Play();
+            Debug.Log("Collected an item!");
         }
     }
     void FixedUpdate()
@@ -68,6 +73,5 @@ public class PlayerController : MonoBehaviour
             plrAnim.SetTrigger("Jump_trig");
         }
 
-        plrRb.velocity = movement * speed * Time.fixedDeltaTime;
     } 
 }
